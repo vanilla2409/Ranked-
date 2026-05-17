@@ -3,8 +3,8 @@ const JWT_SECRET = process.env.JWT_SECRET || 'your_jwt_secret';
 
 const auth = (req, res, next) => {
   // console.log('Auth middleware triggered');
-  const token = req.cookies?.token;
-  if (!token) return res.status(401).json({ success: false, message: 'Missing Auth cookie' });
+  const token = req.cookies?.token || req.headers.authorization?.split(' ')[1];
+  if (!token) return res.status(401).json({ success: false, message: 'Missing Auth token' });
   try {
 
     const decoded = jwt.verify(token, JWT_SECRET);

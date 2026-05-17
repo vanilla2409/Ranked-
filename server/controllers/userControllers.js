@@ -31,7 +31,7 @@ export const signup = async (req, res) => {
   };
   res.cookie('token', token, cookieOptions);
   // Here we would send a verification email with the token
-  res.status(201).json({ success: true, message: 'User created successfully. Please login to continue' });
+  res.status(201).json({ success: true, token, message: 'User created successfully. Please login to continue' });
 };
 
 export const login = async (req, res) => {
@@ -67,6 +67,7 @@ export const login = async (req, res) => {
     res.json({ 
       success: true,
       message: 'Login successful.',
+      token,
       user: { userId: user.id, username: user.username },
     })
   }

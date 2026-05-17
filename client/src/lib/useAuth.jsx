@@ -16,6 +16,7 @@ export const AuthProvider = ({ children }) => {
       // console.log(data);
       if (data.success === false) {
         console.log('Not authenticated');
+        localStorage.removeItem('token');
         setUser(null);
         return;
       }
@@ -25,6 +26,7 @@ export const AuthProvider = ({ children }) => {
         matchesWon: data.matchesWon || 0,
       });
     } catch {
+      localStorage.removeItem('token');
       setUser(null);
     } finally {
       setLoading(false);
@@ -36,8 +38,14 @@ export const AuthProvider = ({ children }) => {
   }, []);
 
   const logout = async () => {
-    await axios.post('/users/logout');
-    setUser(null);
+    try {
+      await axios.post('/users/logout');
+    } catch (err) {
+      console.error('Logout API error:', err);
+    } finally {
+      localStorage.removeItem('token');
+      setUser(null);
+    }
   };
 
   return (

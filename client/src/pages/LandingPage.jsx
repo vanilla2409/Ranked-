@@ -231,6 +231,7 @@ export default function LandingPage() {
         password: loginForm.password,
       })
       if (data.success) {
+        localStorage.setItem('token', data.token)
         showSuccess("Logged in successfully")
         setLoginForm({ email: "", password: "" })
         setLoading(false)
