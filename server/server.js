@@ -231,7 +231,11 @@ app.post('/submit', async (req, res) => {
     })
 
   } catch (error) {
-    console.error('Error submitting code:', error.code);
+    console.error('Error submitting code:', error);
+    res.status(500).json({
+      success: false,
+      message: "Failed to connect to the code compilation server. Please try again."
+    });
   }
 
   
@@ -342,6 +346,10 @@ app.post('/status-submission', async (req, res) => {
       });
     } catch (error) {
       console.error('Error adding new match:', error);
+      res.status(500).json({
+        success: false,
+        message: "Internal Server Error while finalising match details."
+      });
     }
   }
   else{
