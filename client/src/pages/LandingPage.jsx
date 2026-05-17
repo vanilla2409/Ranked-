@@ -278,7 +278,7 @@ export default function LandingPage() {
         showError(response.data.message || "Signup failed")
       }
     } catch (err) {
-      showError(err.data.message)
+      showError(err.response?.data?.message || "An error occurred during signup")
     } finally {
       setLoading(false)
     }
@@ -428,6 +428,7 @@ export default function LandingPage() {
               className="hero-btn bg-gradient-to-r from-fuchsia-600 to-purple-600 hover:from-fuchsia-700 hover:to-purple-700 text-white border-0 text-lg px-8 py-6 h-auto font-semibold shadow-lg shadow-fuchsia-500/25 hover:shadow-fuchsia-500/40 transition-all duration-300"
               type="button"
               style={{ display: 'inline-block' }}
+              onClick={() => user ? navigate('/battle') : setLoginOpen(true)}
             >
               Enter Battle Arena
             </Button>
@@ -593,7 +594,7 @@ export default function LandingPage() {
                 </div>
 
                 <div className="bg-[#232136] border-t border-fuchsia-900/30 p-4 text-center">
-                  <Button variant="ghost" className="text-fuchsia-400 hover:text-fuchsia-300 hover:bg-fuchsia-500/10">
+                  <Button variant="ghost" className="text-fuchsia-400 hover:text-fuchsia-300 hover:bg-fuchsia-500/10" onClick={() => navigate('/leaderboard')}>
                     View Full Leaderboard
                     <TrendingUp className="w-4 h-4 ml-2" />
                   </Button>
@@ -616,6 +617,7 @@ export default function LandingPage() {
             <Button
               size="lg"
               className=" bg-gradient-to-r from-fuchsia-600 to-purple-600 hover:from-fuchsia-700 hover:to-purple-700 text-white border-0 text-lg md:text-2xl px-12 py-6 h-auto font-semibold shadow-lg shadow-fuchsia-500/25 hover:shadow-fuchsia-500/40 transition-all duration-300"
+              onClick={() => user ? navigate('/battle') : setSignupOpen(true)}
             >
               Start Your Battle Journey
             </Button>

@@ -36,7 +36,7 @@ export const AuthProvider = ({ children }) => {
   }, []);
 
   const logout = async () => {
-    await axios.post('users/logout');
+    await axios.post('/users/logout');
     setUser(null);
   };
 

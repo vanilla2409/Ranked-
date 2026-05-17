@@ -197,7 +197,7 @@ function BattlePage({ matchDetails }) {
                 
               </div>
               <div className="flex gap-2">
-                <Button onClick={handleSubmit} disabled={submitLoading} className={submitLoading ? "bg-fuchsia-800" : "bg-fuchsia-600" + "text-white hover:bg-fuchsia-700 px-6 py-2 text-base font-semibold rounded-md"}>{submitLoading ? "Submitting..." : "Submit"}</Button>
+                <Button onClick={handleSubmit} disabled={submitLoading} className={submitLoading ? "bg-fuchsia-800 text-white hover:bg-fuchsia-900 px-6 py-2 text-base font-semibold rounded-md" : "bg-fuchsia-600 text-white hover:bg-fuchsia-700 px-6 py-2 text-base font-semibold rounded-md"}>{submitLoading ? "Submitting..." : "Submit"}</Button>
                 <Dialog open={resignDialogOpen} onOpenChange={setResignDialogOpen}>
                   <DialogTrigger asChild>
                     <Button className="bg-slate-900 border border-red-500 text-red-500 cursor-pointer hover:bg-neutral-900 px-6 py-2 text-base font-semibold rounded-md">Resign</Button>

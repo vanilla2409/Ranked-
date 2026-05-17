@@ -1,6 +1,7 @@
 import { useState, useEffect, useMemo } from "react";
 import { Card, CardContent } from "../components/ui/card";
-import { Brain, Badge } from "lucide-react";
+import { Brain } from "lucide-react";
+import { Badge } from "../components/ui/badge";
 import { Sword, Target, Zap, Trophy, Code } from "lucide-react";
 
 // Define tips outside the component for stability
@@ -117,7 +118,7 @@ export default function FindingMatchPage() {
         <Zap className="w-5 h-5 text-purple-500/30" />
       </div>
 
-      <style jsx>{`
+      <style>{`
         @keyframes float {
           0%, 100% { transform: translateY(0px); }
           50% { transform: translateY(-20px); }

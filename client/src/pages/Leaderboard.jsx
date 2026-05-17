@@ -1,31 +1,30 @@
 import { useEffect, useState } from "react"
 import { Card, CardContent } from "../components/ui/card"
-import { User, Crown, Trophy, Medal } from "lucide-react"
+import { User, Crown, Trophy, Medal, ChevronLeft, ChevronRight } from "lucide-react"
+import { Button } from "../components/ui/button"
 import axios from "../lib/axios"
 
 export default function LeaderboardPage() {
   const [leaderboard, setLeaderboard] = useState([])
   const [loading, setLoading] = useState(true)
+  const [page, setPage] = useState(1)
+  const [totalPages, setTotalPages] = useState(1)
+  const limit = 10
 
   useEffect(() => {
     const fetchLeaderboard = async () => {
       setLoading(true)
       try {
-        const response = await axios.get("/leaderboard", { params: { range: 5 } })
+        const response = await axios.get("/api/leaderboard", { params: { page, limit } })
         if (response.data.success) {
-          const modifiedLeaderboard = response.data.leaderboard.reduce((acc, curr, idx, arr) => {
-            if (idx % 2 === 0) {
-              acc.push({
-                rank: acc.length + 1,
-                username: curr,
-                rating: Number.parseFloat(arr[idx + 1]),
-                isTop: acc.length < 5, // mark top 5 as `isTop`
-              })
-            }
-            return acc
-          }, [])
-          setLeaderboard(modifiedLeaderboard)
-          console.log("Leaderboard fetched successfully:", response.data.leaderboard)
+          const mapped = response.data.data.map((entry) => ({
+            rank: entry.rank,
+            username: entry.userId, // userId is actually username in leaderboard
+            rating: entry.rating,
+            isTop: entry.rank <= 3,
+          }))
+          setLeaderboard(mapped)
+          setTotalPages(response.data.pagination.totalPages)
         } else {
           console.error(response.data.message || "Failed to fetch leaderboard")
         }
@@ -36,7 +35,7 @@ export default function LeaderboardPage() {
       }
     }
     fetchLeaderboard()
-  }, [])
+  }, [page])
 
   // Extract top 3 players and remaining players
   const topThreePlayers = leaderboard.slice(0, 3)
@@ -168,6 +167,29 @@ export default function LeaderboardPage() {
                 </CardContent>
               </Card>
             </div>
+
+            {/* Pagination */}
+            {totalPages > 1 && (
+              <div className="flex justify-center items-center gap-4 mt-6">
+                <Button
+                  variant="ghost"
+                  className="text-fuchsia-400 hover:text-fuchsia-300 hover:bg-fuchsia-500/10 disabled:opacity-40"
+                  onClick={() => setPage((p) => Math.max(1, p - 1))}
+                  disabled={page === 1}
+                >
+                  <ChevronLeft className="w-5 h-5 mr-1" /> Prev
+                </Button>
+                <span className="text-gray-400 text-sm">Page {page} of {totalPages}</span>
+                <Button
+                  variant="ghost"
+                  className="text-fuchsia-400 hover:text-fuchsia-300 hover:bg-fuchsia-500/10 disabled:opacity-40"
+                  onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
+                  disabled={page === totalPages}
+                >
+                  Next <ChevronRight className="w-5 h-5 ml-1" />
+                </Button>
+              </div>
+            )}
           </>
         )}
       </div>

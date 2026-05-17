@@ -100,27 +100,31 @@ export async function matchmakerWorker() {
   console.log("🎯 Matchmaking worker started...");
 
   while (true) {
+    try {
+      const TopPlayer = await redis.zrange(MATCHMAKING_KEY, 0, 0, "WITHSCORES");
+      if (TopPlayer.length === 0 || TopPlayer.length === 1) {
+        // No players in the queue
+        // console.log("No players in the matchmaking queue");
+        await new Promise((res) => setTimeout(res, 7000));
+        continue;
+      }
 
-    const TopPlayer = await redis.zrange(MATCHMAKING_KEY, 0, 0, "WITHSCORES");
-    if (TopPlayer.length === 0 || TopPlayer.length === 1) {
-      // No players in the queue
-      // console.log("No players in the matchmaking queue");
-      await new Promise((res) => setTimeout(res, 7000));
-      continue;
-    }
+      const opponentId = await findOpponent(TopPlayer[0], Number(TopPlayer[1]));
 
+      if (opponentId) {
+        // Remove both players from the queue
+        await redis.zrem(MATCHMAKING_KEY, TopPlayer[0], opponentId);
+        // Create the match
+        await createMatch(TopPlayer[0], opponentId);
 
-    const opponentId = await findOpponent(TopPlayer[0], Number(TopPlayer[1]));
-
-    if (opponentId) {
-      // Remove both players from the queue
-      await redis.zrem(MATCHMAKING_KEY, TopPlayer[0], opponentId);
-      // Create the match
-      await createMatch(TopPlayer[0], opponentId);
-
-    } else {
-      // No match found for this player yet; try again shortly
-      await new Promise((res) => setTimeout(res, 500));
+      } else {
+        // No match found for this player yet; try again shortly
+        await new Promise((res) => setTimeout(res, 500));
+      }
+    } catch (error) {
+      console.error("Matchmaking worker error:", error.message);
+      // Wait longer if there's an error (e.g., Redis down)
+      await new Promise((res) => setTimeout(res, 10000));
     }
   }
 }
