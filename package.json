@@ -8,6 +8,7 @@
   ],
   "scripts": {
     "build": "npm run build --workspace=server",
+    "migrate": "npm run migrate --workspace=server",
     "start": "node server/server.js",
     "client": "npm run dev --workspace=client",
     "server": "npm run start --workspace=server",

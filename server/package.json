@@ -5,7 +5,8 @@
   "type": "module",
   "main": "server.js",
   "scripts": {
-    "build": "prisma generate && prisma migrate deploy && prisma db seed",
+    "build": "prisma generate",
+    "migrate": "prisma migrate deploy && prisma db seed",
     "start": "node server.js",
     "start-prod": "node server.js",
     "start-dev": "nodemon server.js",
