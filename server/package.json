@@ -5,7 +5,8 @@
   "type": "module",
   "main": "server.js",
   "scripts": {
-    "build": "npx prisma migrate && npx prisma migrate deploy && npx prisma db seed",
+    "build": "prisma generate && prisma migrate deploy && prisma db seed",
+    "start": "node server.js",
     "start-prod": "node server.js",
     "start-dev": "nodemon server.js",
     "create-tunnel": "sudo sysctl -w net.core.rmem_max=7500000 && sudo sysctl -w net.core.wmem_max=7500000 && cloudflared tunnel --url http://localhost:3000",
