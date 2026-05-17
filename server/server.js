@@ -205,14 +205,21 @@ app.post('/submit', async (req, res) => {
   let response = null;
   // console.log('Submissions:', submissions);
   try {
+    const isRapidAPI = process.env.JUDGE0_API_URL.includes('rapidapi.com');
+    const headers = isRapidAPI ? {
+      'X-RapidAPI-Key': process.env.JUDGE0_API_KEY,
+      'X-RapidAPI-Host': 'judge0-ce.p.rapidapi.com',
+      'Content-Type': 'application/json'
+    } : {
+      'X-Auth-Token': process.env.JUDGE0_API_KEY,
+      'Content-Type': 'application/json'
+    };
+
     response = await axios.post(
       `${process.env.JUDGE0_API_URL}/submissions/batch`,
       { submissions },
       {
-        headers: {
-          'X-Auth-Token': process.env.JUDGE0_API_KEY,
-          'Content-Type': 'application/json'
-        },
+        headers,
         params: {
           base64_encoded: false,
         }
@@ -298,12 +305,41 @@ app.post('/status-submission', async (req, res) => {
     })
 
   for(const token of tokens) {
-    const submission = await getSubmissionForUser(token);
+    let submission = await getSubmissionForUser(token);
     if(!submission) {
       return res.json({
         success: false,
         message: "Invalid submission ID"
       });
+    }
+
+    // Fallback: If status is PENDING, poll Judge0 directly to support local environments without public callbacks
+    if (submission.status === 'PENDING') {
+      try {
+        const isRapidAPI = process.env.JUDGE0_API_URL.includes('rapidapi.com');
+        const headers = isRapidAPI ? {
+          'X-RapidAPI-Key': process.env.JUDGE0_API_KEY,
+          'X-RapidAPI-Host': 'judge0-ce.p.rapidapi.com'
+        } : {
+          'X-Auth-Token': process.env.JUDGE0_API_KEY
+        };
+
+        const response = await axios.get(`${process.env.JUDGE0_API_URL}/submissions/${token}`, {
+          headers,
+          params: {
+            base64_encoded: false
+          }
+        });
+
+        const latestStatus = response.data?.status?.description;
+        if (latestStatus && latestStatus !== 'In Queue' && latestStatus !== 'Processing') {
+          // Update local status in Redis
+          await setSubmissionForUser(token, { status: latestStatus });
+          submission.status = latestStatus;
+        }
+      } catch (err) {
+        console.error(`Error polling Judge0 directly for token ${token}:`, err.message);
+      }
     }
 
     if(submission.status !== 'Accepted'){
