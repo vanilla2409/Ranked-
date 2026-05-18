@@ -183,13 +183,25 @@ function BattlePage({ matchDetails }) {
   };
 
   const handleResign = async () => {
+    try {
+      await axios.post('/resign', { matchId: matchDetails.matchId });
+    } catch (err) {
+      console.error("Error resigning:", err);
+    }
     localStorage.removeItem("matchDetails"); // Clear match details from local storage
-    await refetch(); // Refetch user data
     setTimerActive(false);
+    await refetch(); // Refetch user data
     navigate("/dashboard");
-
   };
+
   const handleExit = async () => {
+    if (timerActive) {
+      try {
+        await axios.post('/resign', { matchId: matchDetails.matchId });
+      } catch (err) {
+        console.error("Error resigning on exit:", err);
+      }
+    }
     localStorage.removeItem("matchDetails"); // Clear match details from local storage
     setTimerActive(false); // Stop the timer
     setResultDialogOpen(false); // Close any open dialogs

@@ -329,6 +329,73 @@ app.get('/match-status', async (req, res) => {
   });
 })
 
+app.post('/resign', async (req, res) => {
+  const { matchId } = req.body;
+  const loserUsername = req.user.username;
+
+  if (!matchId) {
+    return res.json({
+      success: false,
+      message: "Match ID is required"
+    });
+  }
+
+  const matchDetails = await getMatchDetails(matchId);
+  if (!matchDetails) {
+    return res.json({
+      success: false,
+      message: "Match not found"
+    });
+  }
+
+  if (matchDetails.status === 'completed') {
+    return res.json({
+      success: false,
+      message: "Match is already completed"
+    });
+  }
+
+  try {
+    const winnerUsername = matchDetails.players[0] === loserUsername ? matchDetails.players[1] : matchDetails.players[0];
+
+    // Add match record to the database
+    await addNewMatch(winnerUsername, loserUsername, matchId, matchDetails.problem.id, matchDetails.playedAt);
+
+    // Get winner and loser player objects from Redis
+    const winnerPlayer = await checkPlayer(winnerUsername);
+    const loserPlayer = await checkPlayer(loserUsername);
+
+    // Calculate rating differences & update leaderboard & save to Redis
+    const ratingDifference = await updateMatchResults(winnerPlayer, loserPlayer, 1);
+
+    // Update match status to completed in Redis and record winner ELO delta
+    await updateMatchDetails(matchId, ratingDifference, winnerUsername);
+
+    // Update user activities/heatmaps
+    await updateActivity(req.user.userId);
+    
+    // Attempt to update winner activity if they exist in the DB
+    const winnerUser = await prisma.user.findUnique({
+      where: { username: winnerUsername }
+    });
+    if (winnerUser) {
+      await updateActivity(winnerUser.id);
+    }
+
+    res.json({
+      success: true,
+      message: "Resigned successfully",
+      ratingDifference: ratingDifference.loser
+    });
+  } catch (error) {
+    console.error('Error during resignation:', error);
+    res.status(500).json({
+      success: false,
+      message: "Internal Server Error during resignation"
+    });
+  }
+})
+
 app.post('/status-submission', async (req, res) => {
   const {tokens} = req.body;
 
