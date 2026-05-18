@@ -1,0 +1,10 @@
+def removeDuplicates(arr):
+    return sorted(list(set(arr)))
+
+if __name__ == "__main__":
+    import sys
+    lines = sys.stdin.read().splitlines()
+    if len(lines) >= 2:
+        arr = list(map(int, lines[1].split()))
+        ans = removeDuplicates(arr)
+        print(" ".join(map(str, ans)))

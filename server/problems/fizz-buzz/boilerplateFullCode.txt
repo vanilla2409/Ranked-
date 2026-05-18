@@ -1,0 +1,7 @@
+##USER_CODE##
+
+if __name__ == "__main__":
+    import sys
+    n = int(sys.stdin.read().strip())
+    for line in fizzBuzz(n):
+        print(line)
