@@ -502,6 +502,29 @@ function ConsolePanel({ onClose, result, activeTab, setActiveTab, problemSlug })
 }
 
 function ResultDialog({ open, onClose, title, message, eloChange }) {
+  const [countdown, setCountdown] = useState(5);
+
+  useEffect(() => {
+    if (!open) return;
+    setCountdown(5);
+    const interval = setInterval(() => {
+      setCountdown((prev) => {
+        if (prev <= 1) {
+          clearInterval(interval);
+          return 0;
+        }
+        return prev - 1;
+      });
+    }, 1000);
+    return () => clearInterval(interval);
+  }, [open]);
+
+  useEffect(() => {
+    if (countdown === 0 && open) {
+      onClose();
+    }
+  }, [countdown, open, onClose]);
+
   return (
     <Dialog open={open} onOpenChange={onClose}>
       <DialogContent className="bg-[#181022] border-fuchsia-700 text-white">
@@ -513,8 +536,13 @@ function ResultDialog({ open, onClose, title, message, eloChange }) {
         <div className="text-center my-4">
           <div className="text-lg mb-2">{message}</div>
           {eloChange !== null && (
-            <div className={`text-lg font-semibold ${eloChange > 0 ? 'text-green-400' : 'text-red-400'}`}>{eloChange > 0 ? `+${Math.round(eloChange)} elo` : `${Math.round(eloChange)} elo`} </div>
+            <div className={`text-lg font-semibold ${eloChange > 0 ? 'text-green-400' : 'text-red-400'}`}>
+              {eloChange > 0 ? `+${Math.round(eloChange)} elo` : `${Math.round(eloChange)} elo`}
+            </div>
           )}
+          <div className="text-xs text-neutral-400 mt-4 italic">
+            Redirecting to dashboard in {countdown} seconds...
+          </div>
         </div>
         <DialogFooter>
           <Button onClick={onClose} className="bg-gradient-to-r from-fuchsia-600 to-purple-600 text-white w-full">Close</Button>
