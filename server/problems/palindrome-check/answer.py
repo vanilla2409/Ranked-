@@ -1,17 +1,8 @@
-def isPalindrome(x):
-    if x < 0:
-        return False
-
-    original = x
-    reversed_num = 0
-
-    while x > 0:
-        reversed_num = reversed_num * 10 + x % 10
-        x //= 10
-
-    return original == reversed_num
+def isPalindrome(s):
+    return s == s[::-1]
 
 
 if __name__ == "__main__":
-    x = int(input())
-    print(isPalindrome(x))
+    s = input().strip()
+    print(isPalindrome(s))
+

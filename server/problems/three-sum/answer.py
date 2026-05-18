@@ -1,4 +1,4 @@
-def threeSum(nums):
+def three_sum(nums):
     nums.sort()
     result = []
     n = len(nums)
@@ -30,5 +30,5 @@ def threeSum(nums):
 if __name__ == "__main__":
     n = int(input())
     nums = list(map(int, input().split()))
-    result = threeSum(nums)
-    print(str(result).replace(" ", ""))
+    result = three_sum(nums)
+    print(str(result).replace(" ", ""))

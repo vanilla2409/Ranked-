@@ -1,5 +1,6 @@
 ##USER_CODE##
 
 if __name__ == "__main__":
-    x = int(input())
+    x = input().strip()
     print(isPalindrome(x))
+

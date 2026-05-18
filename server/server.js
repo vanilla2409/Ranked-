@@ -102,12 +102,16 @@ app.put('/judge0/callback', async (req, res) => {
   try {
     const body = req.body;
 
-    // console.log('Judge0 callback received:', body);
-
     const submissionId = body.token
     const status = body.status.description;
 
-    await setSubmissionForUser(submissionId, {status: status});
+    const submissionData = { status };
+    if (body.stdout) submissionData.stdout = body.stdout;
+    if (body.stderr) submissionData.stderr = body.stderr;
+    if (body.compile_output) submissionData.compile_output = body.compile_output;
+    if (body.message) submissionData.message = body.message;
+
+    await setSubmissionForUser(submissionId, submissionData);
 
     if (!submissionId || !status) {
       return res.status(400).json({ error: 'Missing token/submission_id or status' });
@@ -295,6 +299,36 @@ app.get('/status-fm' , async (req, res) => {
   }
 })
 
+app.get('/match-status', async (req, res) => {
+  const { matchId } = req.query;
+
+  if (!matchId) {
+    return res.json({
+      success: false,
+      message: "Match ID is required"
+    });
+  }
+
+  const matchDetails = await getMatchDetails(matchId);
+  if (!matchDetails) {
+    return res.json({
+      success: false,
+      message: "Match not found"
+    });
+  }
+
+  res.json({
+    success: true,
+    status: matchDetails.status,
+    players: matchDetails.players,
+    successfulSubmission: matchDetails.successfulSubmission,
+    ratingDifference: matchDetails.status === "completed" ? {
+      winner: matchDetails.winner,
+      loser: matchDetails.loser
+    } : null
+  });
+})
+
 app.post('/status-submission', async (req, res) => {
   const {tokens} = req.body;
 
@@ -304,7 +338,16 @@ app.post('/status-submission', async (req, res) => {
       message: "Submission ID is required"
     })
 
-  for(const token of tokens) {
+  const matchDetails = await getMatchDetails(req.body.matchId);
+  if (!matchDetails) {
+    return res.json({
+      success: false,
+      message: "Time limit exceeded for this match. Rating will be decreased only if your opponent was able to solve it"
+    })
+  }
+
+  for (let i = 0; i < tokens.length; i++) {
+    const token = tokens[i];
     let submission = await getSubmissionForUser(token);
     if(!submission) {
       return res.json({
@@ -333,9 +376,18 @@ app.post('/status-submission', async (req, res) => {
 
         const latestStatus = response.data?.status?.description;
         if (latestStatus && latestStatus !== 'In Queue' && latestStatus !== 'Processing') {
+          const submissionData = { status: latestStatus };
+          if (response.data.stdout) submissionData.stdout = response.data.stdout;
+          if (response.data.stderr) submissionData.stderr = response.data.stderr;
+          if (response.data.compile_output) submissionData.compile_output = response.data.compile_output;
+          if (response.data.message) submissionData.message = response.data.message;
+
           // Update local status in Redis
-          await setSubmissionForUser(token, { status: latestStatus });
-          submission.status = latestStatus;
+          await setSubmissionForUser(token, submissionData);
+          submission = {
+            ...submission,
+            ...submissionData
+          };
         }
       } catch (err) {
         console.error(`Error polling Judge0 directly for token ${token}:`, err.message);
@@ -343,15 +395,28 @@ app.post('/status-submission', async (req, res) => {
     }
 
     if(submission.status !== 'Accepted'){
+      const testCases = loadTestCases(matchDetails.problem.slug);
+      const failedTestCase = testCases[i];
+
       res.json({
         success: false,
-        message: submission.status
+        message: submission.status,
+        details: {
+          status: submission.status,
+          failedIndex: i + 1,
+          totalTestCases: tokens.length,
+          input: failedTestCase ? failedTestCase.input : null,
+          expectedOutput: failedTestCase ? failedTestCase.expected_output : null,
+          actualOutput: submission.stdout || null,
+          stderr: submission.stderr || null,
+          compile_output: submission.compile_output || null,
+          message: submission.message || null
+        }
       });
       return;
     }
   }
 
-  const matchDetails = await getMatchDetails(req.body.matchId);
 
   if(matchDetails.status === 'pending') { // if true, he is the first person to finish (hence winner)
     
