@@ -140,6 +140,7 @@ function BattlePage({ matchDetails }) {
                 setResultDialogMessage(res.data.message);
                 setResultDialogElo(res.data.ratingDifference);
                 setResultDialogOpen(true);
+                setTimerActive(false); // Stop active match state and timer
                 setSubmitLoading(false);
                 return; // Exit polling on success
               }
